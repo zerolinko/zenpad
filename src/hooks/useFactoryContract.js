@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { ethers } from 'ethers';
 import factoryAbi from '../contracts/TokenFactory.json';
 
-const FACTORY_ADDRESS = "0xYourFactoryAddressHere"; // TODO: Replace with real address
+const FACTORY_ADDRESS = "0x0000000000000000000000000000000000000000"; // TODO: Replace with real address
 
 export default function useFactoryContract() {
   return useMemo(() => {
