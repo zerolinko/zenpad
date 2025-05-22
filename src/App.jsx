@@ -1,5 +1,8 @@
 import React from 'react';
-import CreateToken from './pages/CreateToken';
+import Home from './pages/Home';
+...
+<Home />
+
 
 export default function App() {
   return (
