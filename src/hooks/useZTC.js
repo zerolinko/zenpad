@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { ethers } from 'ethers';
 import erc20Abi from '../contracts/IERC20.json';
 
-const ZTC_ADDRESS = "0xYourZtcTokenAddressHere"; // TODO: Replace with real token address
+const ZTC_ADDRESS = "0x0000000000000000000000000000000000000000"; // TODO: Replace with real token address
 
 export default function useZTC() {
   const approve = useCallback(async (spender, amount) => {
