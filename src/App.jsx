@@ -1,14 +1,19 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
 import Home from './pages/Home';
-...
-<Home />
-
+import CreateToken from './pages/CreateToken';
+import TokenDetail from './pages/TokenDetail';
 
 export default function App() {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold text-green-500 mb-4">ZenPad</h1>
-      <CreateToken />
-    </div>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/create" element={<CreateToken />} />
+        <Route path="/token/:address" element={<TokenDetail />} />
+      </Routes>
+    </Router>
   );
 }
