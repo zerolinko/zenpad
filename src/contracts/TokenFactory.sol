@@ -7,7 +7,9 @@ import "./IERC20.sol";
 contract TokenFactory {
     address public feeCollector = 0x6c2Bd887389Fe2f8Df6cBEe1A6FbEd6C0dD99154;
     uint256 public creationFee = 100 * 1e18; // 100 ZTC
-    address public ztcToken; // Address of ZTC token
+    address public ztcToken;
+
+    address[] public tokens;
 
     event TokenCreated(address token, address creator);
 
@@ -41,8 +43,18 @@ contract TokenFactory {
         );
 
         uint256 initialAmount = (totalSupply * initialBuyPercent) / 100;
-        token.buy{value: 0}(msg.sender, initialAmount); // initial buy
+        token.buy{value: 0}(msg.sender, initialAmount);
+
+        tokens.push(address(token));
 
         emit TokenCreated(address(token), msg.sender);
+    }
+
+    function getTokens() external view returns (address[] memory) {
+        return tokens;
+    }
+
+    function getTokenCount() external view returns (uint256) {
+        return tokens.length;
     }
 }
