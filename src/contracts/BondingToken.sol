@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./IERC20.sol";
-
 contract BondingToken {
     string public name;
     string public symbol;
@@ -10,16 +8,15 @@ contract BondingToken {
     string public imageURI;
     uint256 public totalSupplyCap;
     uint256 public totalMinted;
-    uint256 public reserve;
     address public creator;
-    address public ztc;
     address public feeCollector;
+    uint256 public price = 1 ether;
     uint256 public feePercent = 50; // 0.5%
 
     mapping(address => uint256) public balances;
 
-    event Bought(address indexed user, uint256 amount, uint256 price);
-    event Sold(address indexed user, uint256 amount, uint256 refund);
+    event Bought(address indexed user, uint256 amount, uint256 paid);
+    event Sold(address indexed user, uint256 amount, uint256 refunded);
 
     constructor(
         string memory _name,
@@ -28,7 +25,6 @@ contract BondingToken {
         string memory _imageURI,
         address _creator,
         uint256 _supplyCap,
-        address _ztc,
         address _feeCollector
     ) {
         name = _name;
@@ -37,47 +33,41 @@ contract BondingToken {
         imageURI = _imageURI;
         creator = _creator;
         totalSupplyCap = _supplyCap;
-        ztc = _ztc;
         feeCollector = _feeCollector;
     }
 
-    function priceToBuy(uint256 amount) public view returns (uint256) {
-        return amount * 1e18; // flat price for simplicity
+    function initialBuy(address to, uint256 amount) external payable {
+        require(totalMinted == 0, "Initial buy already done");
+        _buy(to, amount);
     }
 
-    function priceToSell(uint256 amount) public view returns (uint256) {
-        return amount * 1e18;
+    function buy(uint256 amount) external payable {
+        _buy(msg.sender, amount);
     }
 
-    function buy(address to, uint256 amount) public {
+    function _buy(address to, uint256 amount) internal {
         require(totalMinted + amount <= totalSupplyCap, "Exceeds cap");
+        uint256 totalCost = price * amount;
+        require(msg.value >= totalCost, "Insufficient ZTC sent");
 
-        uint256 cost = priceToBuy(amount);
-        uint256 fee = (cost * feePercent) / 10000;
-
-        IERC20(ztc).transferFrom(msg.sender, feeCollector, fee);
-        IERC20(ztc).transferFrom(msg.sender, address(this), cost - fee);
-
+        uint256 fee = (totalCost * feePercent) / 10000;
+        payable(feeCollector).transfer(fee);
         balances[to] += amount;
         totalMinted += amount;
-        reserve += cost - fee;
 
-        emit Bought(to, amount, cost);
+        emit Bought(to, amount, totalCost);
     }
 
-    function sell(uint256 amount) public {
-        require(balances[msg.sender] >= amount, "Not enough balance");
-
-        uint256 refund = priceToSell(amount);
+    function sell(uint256 amount) external {
+        require(balances[msg.sender] >= amount, "Not enough tokens");
+        uint256 refund = price * amount;
         uint256 fee = (refund * feePercent) / 10000;
 
         balances[msg.sender] -= amount;
         totalMinted -= amount;
-        reserve -= refund - fee;
+        payable(feeCollector).transfer(fee);
+        payable(msg.sender).transfer(refund - fee);
 
-        IERC20(ztc).transfer(feeCollector, fee);
-        IERC20(ztc).transfer(msg.sender, refund - fee);
-
-        emit Sold(msg.sender, amount, refund);
+        emit Sold(msg.sender, amount, refund - fee);
     }
 }
